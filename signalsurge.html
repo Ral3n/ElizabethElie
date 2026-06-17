@@ -695,6 +695,188 @@ const LEVELS = [
     {q:'Which neurotransmitter is most associated with reward and motivation?', options:['Serotonin','Dopamine','Glutamate','Acetylcholine'], answer:1, explain:'Dopamine drives motivation and reward-seeking behavior throughout the brain\'s limbic system.'},
     {q:'Which neurotransmitter do SSRIs, a common antidepressant, target?', options:['Dopamine','Acetylcholine','Serotonin','Glutamate'], answer:2, explain:'SSRIs (Selective Serotonin Reuptake Inhibitors) increase the availability of serotonin at synapses.'}
   ]
+},
+{
+  id:'sympathetic1', type:'routing', icon:'🔥', title:'Fight or Flight', region:'Sympathetic Nervous System',
+  intro:'A sudden threat appears. Route the alarm signal through the sympathetic chain to spike the heart rate before the threat closes in.',
+  hasReflexFinale:false,
+  signals:[{
+    name:'Alarm Signal', color:'#4ee8ff', decayRate:6.6,
+    nodes:[
+      {id:'A', label:'Hypothalamus\n(Alarm Center)', x:0.06, y:0.30, detail:'Detects the threat and triggers the body\'s stress response.'},
+      {id:'B', label:'Preganglionic Neuron\n(Spinal Cord)', x:0.26, y:0.58, detail:'Carries the alarm command out of the spinal cord toward the sympathetic chain.'},
+      {id:'V', label:'Vagus Nerve\n(Parasympathetic)', x:0.26, y:0.12, decoy:true, detail:'The vagus nerve carries the calming parasympathetic signal — the opposite of what\'s needed during a threat.'},
+      {id:'C', label:'Sympathetic\nGanglion', x:0.48, y:0.30, detail:'A relay station just outside the spinal cord where the signal switches to a second neuron.'},
+      {id:'D', label:'Postganglionic\nNeuron', x:0.70, y:0.58, detail:'Carries the final command from the ganglion to the heart itself.'},
+      {id:'E', label:'Heart (SA Node)\nRate Increases', x:0.92, y:0.30, detail:'The heart\'s pacemaker speeds up, pumping more blood to the muscles.'}
+    ],
+    edges:[
+      {a:'A', b:'V', direction:'decoy'},
+      {a:'A', b:'B', direction:'efferent'},
+      {a:'B', b:'C', direction:'efferent', nt:{name:'acetylcholine', label:'Acetylcholine', color:'#ff8fd0'}},
+      {a:'C', b:'D', direction:'efferent', nt:{name:'norepinephrine', label:'Norepinephrine', color:'#ff9d5c'}},
+      {a:'D', b:'E', direction:'efferent'}
+    ],
+    sequence:['A','B','C','D','E']
+  }],
+  anatomy:{
+    summary:'The sympathetic nervous system runs the body\'s fight-or-flight response. A preganglionic neuron leaves the spinal cord and synapses onto a second neuron inside a sympathetic ganglion, releasing acetylcholine. That postganglionic neuron then travels onward to the heart itself, releasing norepinephrine to speed up the pacemaker cells of the SA node.',
+    facts:[
+      'The autonomic nervous system has two competing branches — sympathetic (fight-or-flight) and parasympathetic (rest-and-digest) — that constantly balance each other out.',
+      'Almost every preganglionic autonomic neuron, sympathetic or parasympathetic, releases acetylcholine; what differs between the two branches is the neurotransmitter released at the very end, onto the target organ.',
+      'Norepinephrine binds receptors on the heart\'s SA node, speeding up its firing rate within seconds of release.'
+    ]
+  },
+  quiz:[
+    {q:'Which branch of the autonomic nervous system prepares the body for fight-or-flight?', options:['Sympathetic','Parasympathetic','Somatic','Enteric'], answer:0, explain:'The sympathetic branch mobilizes the body for action — raising heart rate, redirecting blood flow, and releasing stress hormones.'},
+    {q:'Which neurotransmitter do most postganglionic sympathetic neurons release onto their target organ?', options:['Acetylcholine','Norepinephrine','Dopamine','GABA'], answer:1, explain:'Norepinephrine is released at the final synapse onto organs like the heart, while acetylcholine is used one step earlier, at the ganglion.'}
+  ]
+},
+{
+  id:'parasympathetic1', type:'routing', icon:'🌙', title:'Rest and Digest', region:'Parasympathetic Nervous System (Vagus Nerve)',
+  intro:'The danger has passed. Time to bring the body back to baseline — route the calming signal down the vagus nerve to slow the heart back down.',
+  hasReflexFinale:false,
+  signals:[{
+    name:'Calm Signal', color:'#b46eff', decayRate:6.4,
+    nodes:[
+      {id:'A', label:'Hypothalamus\n(Calm Center)', x:0.06, y:0.30, detail:'Initiates the parasympathetic "rest and digest" response once the threat has passed.'},
+      {id:'B', label:'Vagus Nerve\n(Cranial Nerve X)', x:0.28, y:0.58, detail:'The main highway of the parasympathetic system, running from the brainstem down to the heart and gut.'},
+      {id:'S', label:'Sympathetic Chain', x:0.28, y:0.12, decoy:true, detail:'That\'s the activating pathway — exactly the opposite of what\'s needed to calm the body down.'},
+      {id:'C', label:'Parasympathetic\nGanglion (Near Heart)', x:0.50, y:0.30, detail:'Unlike the sympathetic chain, parasympathetic ganglia sit very close to — or inside — their target organ.'},
+      {id:'D', label:'Postganglionic\nNeuron', x:0.72, y:0.58, detail:'A very short neuron, since the ganglion is already right next to the heart.'},
+      {id:'E', label:'Heart (SA Node)\nRate Decreases', x:0.92, y:0.30, detail:'The pacemaker slows back down toward resting rate.'}
+    ],
+    edges:[
+      {a:'A', b:'S', direction:'decoy'},
+      {a:'A', b:'B', direction:'efferent'},
+      {a:'B', b:'C', direction:'efferent', nt:{name:'acetylcholine_g', label:'Acetylcholine', color:'#ff8fd0'}},
+      {a:'C', b:'D', direction:'efferent'},
+      {a:'D', b:'E', direction:'efferent', nt:{name:'acetylcholine_t', label:'Acetylcholine', color:'#ff8fd0'}}
+    ],
+    sequence:['A','B','C','D','E']
+  }],
+  anatomy:{
+    summary:'The vagus nerve carries the parasympathetic "rest and digest" signal almost directly from the brainstem to the heart, synapsing onto a second neuron in a ganglion sitting right next to — or inside — the target organ. Unlike the sympathetic branch, every synapse along this entire pathway, both at the ganglion and at the heart itself, releases the same neurotransmitter: acetylcholine.',
+    facts:[
+      'The vagus nerve (cranial nerve X) is the main highway of the parasympathetic system, reaching the heart, lungs, and digestive organs directly from the brainstem.',
+      'Unlike the sympathetic branch, every synapse in this pathway — both at the ganglion and at the heart itself — releases acetylcholine.',
+      'Acetylcholine slows the heart\'s SA node, which is part of why a strong "vagal" response can sometimes make someone feel briefly lightheaded.'
+    ]
+  },
+  quiz:[
+    {q:'Which cranial nerve carries most of the parasympathetic "rest and digest" signal to the heart and digestive organs?', options:['Optic nerve','Vagus nerve','Trigeminal nerve','Facial nerve'], answer:1, explain:'The vagus nerve (cranial nerve X) is the primary route for parasympathetic signals reaching the chest and abdomen.'},
+    {q:'Which neurotransmitter is used at every synapse in this parasympathetic pathway to the heart?', options:['Norepinephrine','Dopamine','Acetylcholine','Serotonin'], answer:2, explain:'Unlike the sympathetic branch, the parasympathetic branch uses acetylcholine at both the ganglionic synapse and the final synapse onto the organ.'}
+  ]
+},
+{
+  id:'pupil1', type:'reflex', icon:'👁️', title:'Pupillary Light Reflex', region:'Cranial Reflex (Optic & Oculomotor Nerves)',
+  intro:'A flashlight just clicked on in a dark room. This reflex doesn\'t run through the spinal cord at all — it loops entirely through the midbrain. Route it, then brace for the flash.',
+  hasReflexFinale:true,
+  signals:[{
+    name:'Light Signal', color:'#ff5d5d', decayRate:7.0,
+    nodes:[
+      {id:'A', label:'Retina\n(Light Detected)', x:0.06, y:0.50, detail:'Photoreceptors detect the sudden increase in light.'},
+      {id:'B', label:'Optic Nerve\n(CN II)', x:0.25, y:0.28, detail:'Carries visual information from the eye into the brain.'},
+      {id:'C', label:'Pretectal Nucleus\n(Midbrain)', x:0.48, y:0.58, detail:'A relay in the midbrain that handles this reflex without involving conscious vision at all.'},
+      {id:'F', label:'Visual Cortex', x:0.48, y:0.14, decoy:true, detail:'Conscious vision happens here, but this reflex is faster — it loops through the midbrain and never needs to reach the cortex.'},
+      {id:'D', label:'Edinger-Westphal\nNucleus', x:0.70, y:0.30, detail:'A small cluster of neurons controlling the parasympathetic fibers responsible for pupil constriction.'},
+      {id:'E', label:'Oculomotor Nerve (CN III)\n→ Pupil Constricts', x:0.92, y:0.58, detail:'The final motor command reaches the iris, and the pupil narrows to let in less light.'}
+    ],
+    edges:[
+      {a:'A', b:'B', direction:'afferent'},
+      {a:'B', b:'C', direction:'afferent'},
+      {a:'C', b:'F', direction:'decoy'},
+      {a:'C', b:'D', direction:'efferent'},
+      {a:'D', b:'E', direction:'efferent', nt:{name:'acetylcholine', label:'Acetylcholine', color:'#ff8fd0'}}
+    ],
+    sequence:['A','B','C','D','E']
+  }],
+  anatomy:{
+    summary:'Light hitting the retina travels up the optic nerve to the pretectal nucleus in the midbrain — not the visual cortex. From there it\'s relayed to the Edinger-Westphal nucleus, which sends a parasympathetic command down the oculomotor nerve, releasing acetylcholine to contract the iris and constrict the pupil.',
+    facts:[
+      'This reflex loops entirely through the midbrain and never needs to reach the visual cortex, which is why it still works in some forms of cortical blindness.',
+      'The Edinger-Westphal nucleus is a small cluster of neurons within the oculomotor nerve complex, dedicated to the parasympathetic fibers that control pupil size.',
+      'Doctors test this reflex by shining a penlight in one eye and watching both pupils constrict together — a "consensual" response, since the pretectal nucleus signals to both sides at once.'
+    ]
+  },
+  quiz:[
+    {q:'Which cranial nerve carries this reflex\'s motor output back to the eye?', options:['Optic nerve (CN II)','Oculomotor nerve (CN III)','Trigeminal nerve (CN V)','Facial nerve (CN VII)'], answer:1, explain:'The oculomotor nerve (CN III) carries the parasympathetic motor signal that constricts the pupil.'},
+    {q:'This reflex is unusual because it loops through the ___ instead of the spinal cord.', options:['Cerebellum','Midbrain (brainstem)','Hippocampus','Hypothalamus'], answer:1, explain:'The pretectal and Edinger-Westphal nuclei, both in the midbrain, handle this reflex entirely above the spinal cord.'},
+    {q:'Which neurotransmitter triggers the pupil\'s constrictor muscle?', options:['Norepinephrine','Dopamine','Acetylcholine','Glutamate'], answer:2, explain:'The parasympathetic fibers of the oculomotor nerve release acetylcholine onto the iris sphincter muscle.'}
+  ]
+},
+{
+  id:'memory1', type:'synapse', icon:'🧬', title:'Memory Formation', region:'Hippocampus (Long-Term Potentiation)',
+  intro:'A new memory is forming. Strengthen the synapse by routing the signal through the hippocampal circuit and collecting enough neurotransmitter charge to lock it into long-term memory.',
+  hasReflexFinale:false,
+  signals:[{
+    name:'Memory Trace', color:'#ffcc4d', decayRate:6.2,
+    nodes:[
+      {id:'A', label:'Entorhinal Cortex\n(Input)', x:0.06, y:0.50, detail:'The main gateway carrying information from the rest of the cortex into the hippocampus.'},
+      {id:'B', label:'Dentate Gyrus', x:0.26, y:0.28, detail:'One of the few brain regions that keeps generating new neurons throughout life.'},
+      {id:'C', label:'CA3 Region', x:0.48, y:0.58, detail:'Densely interconnected neurons here help pattern-complete partial memories.'},
+      {id:'D', label:'CA1 Region', x:0.70, y:0.28, detail:'The final hippocampal relay before the memory trace heads back out to the cortex.'},
+      {id:'E', label:'Long-Term Memory\n(Output)', x:0.92, y:0.50, detail:'With enough synaptic strengthening, the trace becomes a durable, retrievable memory.'}
+    ],
+    edges:[
+      {a:'A', b:'B', direction:'efferent', nt:{name:'glutamate', label:'Glutamate', color:'#ff9d5c'}},
+      {a:'B', b:'C', direction:'efferent', nt:{name:'acetylcholine', label:'Acetylcholine', color:'#ff8fd0'}},
+      {a:'C', b:'D', direction:'efferent', nt:{name:'dopamine', label:'Dopamine', color:'#ffcc4d'}},
+      {a:'D', b:'E', direction:'efferent'}
+    ],
+    sequence:['A','B','C','D','E']
+  }],
+  anatomy:{
+    summary:'Entorhinal cortex, dentate gyrus, CA3, and CA1 form the hippocampus\'s "trisynaptic pathway," the circuit most long-term potentiation experiments are run on. Glutamate drives the initial signal, acetylcholine supports encoding and attention, and dopamine can tag a moment as significant enough to strengthen its synapses further — turning a fleeting trace into a lasting memory.',
+    facts:[
+      'This entorhinal cortex → dentate gyrus → CA3 → CA1 circuit is often called the hippocampal "trisynaptic pathway."',
+      'Long-term potentiation (LTP) is the lasting strengthening of a synapse from repeated activity — the cellular basis of "neurons that fire together, wire together."',
+      'Dopamine released during a meaningful or rewarding moment can tag a memory for longer storage, part of why emotionally charged memories tend to stick better than mundane ones.'
+    ]
+  },
+  quiz:[
+    {q:'What is the name for the lasting strengthening of a synapse from repeated activity — the cellular basis of memory?', options:['Long-term potentiation','Action potential','Reflex arc','Synaptic pruning'], answer:0, explain:'Long-term potentiation (LTP) is how repeated activity makes a synapse fire more strongly in the future.'},
+    {q:'Which brain structure is most associated with forming new long-term memories?', options:['Cerebellum','Hippocampus','Medulla','Amygdala'], answer:1, explain:'The hippocampus is essential for converting short-term experience into durable long-term memory.'}
+  ]
+},
+{
+  id:'attention1', type:'brainstorm', icon:'🎧', title:'Cocktail Party', region:'Selective Attention (Thalamic Gating)',
+  intro:'A crowded room, dozens of voices. Track your friend\'s voice through the auditory pathway while the prefrontal cortex actively filters out the background noise — both signals running at once.',
+  hasReflexFinale:false,
+  signals:[
+    {
+      name:'Target Voice', color:'#4ee8ff', decayRate:6.8,
+      nodes:[
+        {id:'T1', label:'Cochlea (Ear)', x:0.08, y:0.18, detail:'Converts the sound waves of your friend\'s voice into electrical signals.'},
+        {id:'T2', label:'Auditory Nerve', x:0.30, y:0.12, detail:'Carries the raw sound signal toward the brainstem and thalamus.'},
+        {id:'T3', label:'Thalamus\n(Filter Gate)', x:0.52, y:0.30, detail:'Sound signals pass through here before reaching the cortex — and this is where filtering happens.'}
+      ],
+      edges:[{a:'T1',b:'T2',direction:'afferent'},{a:'T2',b:'T3',direction:'afferent', nt:{name:'glutamate', label:'Glutamate', color:'#ff9d5c'}}],
+      sequence:['T1','T2','T3']
+    },
+    {
+      name:'Attention Control', color:'#b46eff', decayRate:6.8,
+      nodes:[
+        {id:'P1', label:'Prefrontal Cortex\n(Focus)', x:0.10, y:0.68, detail:'Decides what\'s worth paying attention to and sends that priority back down to the thalamus.'},
+        {id:'P2', label:'Reticular Nucleus\n(Thalamus)', x:0.34, y:0.84, detail:'Acts like a spotlight operator, dimming background signals so the target voice can stand out.'},
+        {id:'P3', label:'Thalamus\n(Gating Control)', x:0.52, y:0.62, detail:'Receives the filtering command and suppresses competing background sounds.'}
+      ],
+      edges:[{a:'P1',b:'P2',direction:'efferent'},{a:'P2',b:'P3',direction:'efferent', nt:{name:'acetylcholine', label:'Acetylcholine', color:'#ff8fd0'}}],
+      sequence:['P1','P2','P3']
+    }
+  ],
+  anatomy:{
+    summary:'Selective attention isn\'t just "trying harder" — it physically gates which signals get through, before they even reach conscious awareness. The target voice travels up through the cochlea and auditory nerve toward the thalamus, while the prefrontal cortex sends a competing command through the thalamic reticular nucleus, telling the thalamus which signals to dim and which to let pass.',
+    facts:[
+      'Selective attention physically gates which sensory signals are allowed through at the level of the thalamus, before they reach conscious awareness.',
+      'The thalamic reticular nucleus acts like a spotlight operator, dimming background auditory information so a single conversation can stand out.',
+      'Acetylcholine from the brainstem and basal forebrain helps tune this filter — part of why attention and arousal are so closely linked, and why some stimulants act partly through this same system.'
+    ]
+  },
+  quiz:[
+    {q:'Selective attention to one voice in a crowded room mainly works by filtering signals at the level of the:', options:['Retina','Thalamus','Cerebellum','Spinal cord'], answer:1, explain:'The thalamus, guided by the prefrontal cortex, gates which sensory signals are passed on to the cortex.'},
+    {q:'True or false: background noise is filtered out only after you\'ve already consciously heard everything equally.', options:['True','False — filtering happens before full conscious processing'], answer:1, explain:'Much of this filtering happens at the thalamus, before signals are ever fully processed by conscious awareness.'}
+  ]
 }
 ];
 
