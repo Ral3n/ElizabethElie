@@ -181,20 +181,21 @@
 
   .game-actions{position:absolute;top:10px;right:10px;}
 
-  /* ---------- ANATOMY ---------- */
+  /* ---------- ANATOMY (literal body / brain illustration) ---------- */
   #screen-anatomy{align-items:center;}
-  .anatomy-summary{max-width:700px;text-align:center;color:var(--dim);line-height:1.6;font-size:.92rem;margin:14px 0 26px;}
-  .anatomy-flow-block{width:100%;max-width:780px;margin-bottom:18px;}
-  .anatomy-flow-name{font-family:var(--font-mono);font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px;}
-  .anatomy-flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;justify-content:center;}
-  .anatomy-node{background:var(--panel);border:1px solid var(--panel-edge);border-radius:10px;padding:9px 13px;font-size:.78rem;
-    cursor:pointer;transition:border-color .2s;max-width:160px;line-height:1.3;}
-  .anatomy-node:hover{border-color:var(--cyan);}
-  .anatomy-node b{display:block;font-size:.78rem;}
-  .anatomy-arrow{color:var(--dim);font-size:1rem;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .anatomy-summary{max-width:700px;text-align:center;color:var(--dim);line-height:1.6;font-size:.92rem;margin:14px 0 18px;}
+  #anatomy-illustration{width:100%;max-width:480px;margin:6px auto 16px;background:radial-gradient(ellipse at 50% 25%, #0d1322 0%, #070a10 75%);
+    border:1px solid var(--panel-edge);border-radius:18px;padding:10px;}
+  .anat-svg{width:100%;height:auto;display:block;}
+  .anat-static-label{font-family:var(--font-mono);fill:var(--dim);opacity:.6;}
+  .anat-label{font-family:var(--font-body);font-weight:600;font-size:13px;paint-order:stroke;stroke:#070a10;stroke-width:3px;}
+  .anat-nt-label{font-family:var(--font-mono);font-size:10px;letter-spacing:.03em;paint-order:stroke;stroke:#070a10;stroke-width:3px;}
+  .anat-dot{transition:r .15s;}
+  .anat-dot:hover{r:12;}
+  .anat-legend-strip{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-family:var(--font-mono);font-size:.68rem;color:var(--dim);margin-bottom:4px;}
   .nt-pill{font-family:var(--font-mono);font-size:.6rem;padding:2px 7px;border-radius:999px;white-space:nowrap;}
   #anatomy-detail{min-height:26px;font-size:.85rem;color:var(--mist);background:var(--panel);border:1px solid var(--panel-edge);
-    border-radius:10px;padding:10px 14px;max-width:780px;width:100%;text-align:center;margin-top:6px;}
+    border-radius:10px;padding:10px 14px;max-width:480px;width:100%;text-align:center;margin-top:2px;}
   .facts-list{max-width:700px;margin:24px 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px;width:100%;}
   .facts-list li{background:var(--panel);border:1px solid var(--panel-edge);border-left:3px solid var(--violet);border-radius:8px;
     padding:11px 16px;font-size:.85rem;color:var(--dim);line-height:1.5;}
@@ -339,8 +340,8 @@
       <span style="color:var(--cyan);">● efferent — away from CNS</span>
       <span style="color:var(--gold);">● neurotransmitter</span>
     </div>
-    <div id="anatomy-flows"></div>
-    <div id="anatomy-detail">Tap any structure above to learn more about it.</div>
+    <div id="anatomy-illustration"></div>
+    <div id="anatomy-detail">Tap any glowing structure to learn more about it.</div>
     <ul class="facts-list" id="anatomy-facts"></ul>
     <button class="btn btn-primary" id="btn-anatomy-next"><span class="spark"></span>Knowledge Check →</button>
   </section>
@@ -1325,46 +1326,231 @@ function onReflexDone(bonus, info){
 }
 
 /* =========================================================================
-   ANATOMY SCREEN
+   ANATOMY SCREEN — literal body / brain illustration
+   One reusable figure (oversized head with brain cutaway, neck, torso,
+   heart, one extended arm). Every level's nodes map onto real anatomical
+   landmarks on this figure via ANAT_MAP; only the nodes used by the
+   current level are highlighted and labeled.
 ========================================================================= */
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+const ANAT_POINTS = {
+  // limb + peripheral
+  hand:[160,715], forearm:[180,648], forearm2:[212,618], bicep:[242,518],
+  // head sensory organs
+  eye:[482,210], eyeReturn:[505,228], ear:[254,236],
+  opticNerve:[418,217], auditoryNerve:[292,262],
+  // autonomic / thoracic
+  heart:[332,558], vagus:[312,478],
+  ganglionChain:[256,582], ganglionChain2:[244,610],
+  ganglionNearHeart:[295,525], ganglionNearHeart2:[368,540],
+  // spinal cord landmarks
+  spinalUpper:[298,426], spinalMid:[290,558], spinalLow:[283,690],
+  // cortex — frontal / parietal areas
+  motorCortex:[430,148], prefrontalCortex:[462,172], behaviorOutput:[452,196],
+  somatosensoryCortex:[342,88], occipitalCortex:[170,152],
+  // cerebellum / brainstem
+  cerebellumA:[190,312], cerebellumB:[212,332],
+  brainstemUpper:[280,338], brainstemUpper2:[310,360], brainstemLower:[296,378],
+  // deep brain — each spread ≥36 px from its nearest same-level neighbour
+  hypothalamus:[322,248],
+  thalamus:[322,222],         // attention T3
+  thalamus2:[348,248],        // attention P3  — 36 px from thalamus
+  reticularNucleus:[296,252], // attention P2  — 36 px from thalamus2
+  amygdala:[368,254],         // synapse1 B, sensory1 decoy
+  hippocampus:[330,292],      // synapse1 C    — 43 px from amygdala
+  // hippocampal trisynaptic circuit — spread across a 70x50 px arc
+  entorhinal:[378,290],       // memory1 A
+  dentateGyrus:[306,308],     // memory1 B    — 73 px from entorhinal
+  ca3:[326,274],              // memory1 C    — 38 px from dentateGyrus
+  ca1:[356,258],              // memory1 D    — 33 px from ca3
+  corticalStorage:[228,200]   // memory1 E    — 143 px from ca1
+};
+
+const ANAT_MAP = {
+  reflex1:{A:'hand', B:'forearm', C:'spinalLow', F:'somatosensoryCortex', D:'forearm2', E:'bicep'},
+  sensory1:{A:'hand', B:'forearm', C:'spinalUpper', D:'thalamus', G:'amygdala', E:'somatosensoryCortex'},
+  motor1:{A:'motorCortex', H:'cerebellumA', B:'brainstemLower', C:'spinalMid', D:'forearm2', E:'bicep'},
+  brainstorm1:{V1:'eye', V2:'occipitalCortex', V3:'cerebellumA', M1:'motorCortex', M2:'spinalMid', M3:'cerebellumB'},
+  synapse1:{A:'brainstemLower', B:'amygdala', C:'hippocampus', D:'prefrontalCortex', E:'behaviorOutput'},
+  sympathetic1:{A:'hypothalamus', B:'spinalUpper', V:'vagus', C:'ganglionChain', D:'ganglionChain2', E:'heart'},
+  parasympathetic1:{A:'hypothalamus', B:'vagus', S:'ganglionChain', C:'ganglionNearHeart', D:'ganglionNearHeart2', E:'heart'},
+  pupil1:{A:'eye', B:'opticNerve', C:'brainstemUpper', F:'occipitalCortex', D:'brainstemUpper2', E:'eyeReturn'},
+  memory1:{A:'entorhinal', B:'dentateGyrus', C:'ca3', D:'ca1', E:'corticalStorage'},
+  attention1:{T1:'ear', T2:'auditoryNerve', T3:'thalamus', P1:'prefrontalCortex', P2:'reticularNucleus', P3:'thalamus2'}
+};
+
+function anatPos(levelId, nodeId){
+  const key = ANAT_MAP[levelId] && ANAT_MAP[levelId][nodeId];
+  return key ? ANAT_POINTS[key] : null;
+}
+
+// Static reference figure: an oversized head (with a brain cutaway,
+// eye and ear) sitting atop a neck, torso (with heart) and one
+// extended arm ending in a hand — drawn once, reused by every level.
+const ANAT_BASE_SVG = `
+  <defs>
+    <radialGradient id="headGlow" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="rgba(120,150,200,0.10)"/>
+      <stop offset="100%" stop-color="rgba(120,150,200,0)"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="320" cy="230" rx="200" ry="190" fill="url(#headGlow)" stroke="rgba(150,170,210,.55)" stroke-width="2"/>
+
+  <ellipse cx="430" cy="150" rx="90" ry="80" fill="rgba(180,110,255,.07)"/>
+  <ellipse cx="320" cy="80" rx="100" ry="55" fill="rgba(78,232,255,.07)"/>
+  <ellipse cx="175" cy="150" rx="80" ry="80" fill="rgba(89,230,176,.07)"/>
+  <ellipse cx="355" cy="270" rx="80" ry="60" fill="rgba(255,204,77,.07)"/>
+  <ellipse cx="195" cy="320" rx="60" ry="45" fill="rgba(255,143,208,.08)"/>
+
+  <path d="M 300 350 Q 295 380 298 420" fill="none" stroke="rgba(150,170,210,.5)" stroke-width="10" stroke-linecap="round"/>
+
+  <ellipse cx="250" cy="235" rx="14" ry="22" fill="rgba(80,100,150,.10)" stroke="rgba(150,170,210,.5)" stroke-width="1.5"/>
+  <ellipse cx="253" cy="235" rx="6" ry="11" fill="none" stroke="rgba(150,170,210,.4)" stroke-width="1"/>
+
+  <ellipse cx="480" cy="210" rx="17" ry="9" fill="rgba(80,100,150,.10)" stroke="rgba(150,170,210,.6)" stroke-width="1.5"/>
+  <circle cx="484" cy="210" r="4" fill="rgba(150,170,210,.7)"/>
+
+  <path d="M 500 220 Q 525 235 505 252 Q 515 275 490 300 Q 478 312 460 316" fill="none" stroke="rgba(150,170,210,.45)" stroke-width="2"/>
+
+  <path d="M 270 410 Q 280 450 290 470 L 360 470 Q 372 450 380 410" fill="rgba(80,100,150,.06)" stroke="rgba(150,170,210,.45)" stroke-width="2"/>
+  <path d="M 290 470 Q 230 490 222 580 Q 215 680 240 760 L 400 760 Q 425 680 418 580 Q 410 490 360 470 Z" fill="rgba(80,100,150,.05)" stroke="rgba(150,170,210,.45)" stroke-width="2"/>
+
+  <path d="M 350 552 C 350 542 336 538 332 547 C 328 538 314 542 314 552 C 314 562 332 578 332 578 C 332 578 350 562 350 552 Z" fill="rgba(255,120,120,.18)" stroke="rgba(255,120,120,.5)" stroke-width="1.5"/>
+
+  <path d="M 298 420 Q 305 500 290 560 Q 278 630 282 700" fill="none" stroke="rgba(150,170,210,.45)" stroke-width="2" stroke-dasharray="2 5"/>
+
+  <path d="M 270 478 Q 200 540 190 600 Q 178 660 165 700" fill="none" stroke="rgba(150,170,210,.45)" stroke-width="34" stroke-linecap="round"/>
+  <ellipse cx="160" cy="715" rx="26" ry="18" fill="rgba(80,100,150,.07)" stroke="rgba(150,170,210,.5)" stroke-width="2" transform="rotate(-18 160 715)"/>
+  <path d="M 145 700 L 130 685 M 152 705 L 138 688 M 160 710 L 150 692" stroke="rgba(150,170,210,.45)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <text x="430" y="100" class="anat-static-label" text-anchor="middle" font-size="13">Frontal Lobe</text>
+  <text x="320" y="38" class="anat-static-label" text-anchor="middle" font-size="13">Parietal Lobe</text>
+  <text x="175" y="88" class="anat-static-label" text-anchor="middle" font-size="13">Occipital Lobe</text>
+  <text x="355" y="345" class="anat-static-label" text-anchor="middle" font-size="13">Temporal Lobe</text>
+  <text x="195" y="368" class="anat-static-label" text-anchor="middle" font-size="13">Cerebellum</text>
+  <text x="298" y="444" class="anat-static-label" text-anchor="middle" font-size="13">Brainstem</text>
+  <text x="480" y="190" class="anat-static-label" text-anchor="middle" font-size="12">Eye</text>
+  <text x="250" y="268" class="anat-static-label" text-anchor="middle" font-size="12">Ear</text>
+  <text x="332" y="600" class="anat-static-label" text-anchor="middle" font-size="12">Heart</text>
+  <text x="282" y="718" class="anat-static-label" text-anchor="middle" font-size="12">Spinal Cord (lower)</text>
+`;
+
+function buildAnatomySVG(level){
+  const svg = document.createElementNS(SVGNS,'svg');
+  svg.setAttribute('viewBox','0 0 640 900');
+  svg.setAttribute('class','anat-svg');
+  svg.innerHTML = ANAT_BASE_SVG;
+
+  const dyn = document.createElementNS(SVGNS,'g');
+  dyn.setAttribute('class','anat-dynamic');
+  svg.appendChild(dyn);
+
+  function showDetail(text){ document.getElementById('anatomy-detail').textContent = text; }
+
+  level.signals.forEach(sigDef=>{
+    const pts = sigDef.nodes.map(n=>{
+      const p = anatPos(level.id, n.id);
+      return p ? {id:n.id, x:p[0], y:p[1], node:n} : null;
+    }).filter(Boolean);
+    if(!pts.length) return;
+
+    const cx = pts.reduce((s,p)=>s+p.x,0)/pts.length;
+    const cy = pts.reduce((s,p)=>s+p.y,0)/pts.length;
+
+    // edges (drawn first, beneath dots/labels)
+    sigDef.edges.forEach(e=>{
+      const pa = pts.find(p=>p.id===e.a), pb = pts.find(p=>p.id===e.b);
+      if(!pa || !pb) return;
+      const line = document.createElementNS(SVGNS,'line');
+      line.setAttribute('x1',pa.x); line.setAttribute('y1',pa.y);
+      line.setAttribute('x2',pb.x); line.setAttribute('y2',pb.y);
+      line.setAttribute('stroke-linecap','round');
+      if(e.direction==='decoy'){
+        line.setAttribute('stroke','rgba(255,93,93,.55)');
+        line.setAttribute('stroke-width','1.6');
+        line.setAttribute('stroke-dasharray','5,6');
+      } else {
+        line.setAttribute('stroke', e.direction==='afferent' ? 'var(--violet)' : 'var(--cyan)');
+        line.setAttribute('stroke-width','2.6');
+        line.style.filter = `drop-shadow(0 0 4px ${e.direction==='afferent' ? 'rgba(180,110,255,.6)' : 'rgba(78,232,255,.6)'})`;
+      }
+      dyn.appendChild(line);
+
+      if(e.nt){
+        const mx=(pa.x+pb.x)/2, my=(pa.y+pb.y)/2;
+        const pip = document.createElementNS(SVGNS,'circle');
+        pip.setAttribute('cx',mx); pip.setAttribute('cy',my); pip.setAttribute('r',7);
+        pip.setAttribute('fill', e.nt.color);
+        pip.style.filter = `drop-shadow(0 0 6px ${e.nt.color})`;
+        dyn.appendChild(pip);
+        const ptext = document.createElementNS(SVGNS,'text');
+        ptext.setAttribute('x',mx); ptext.setAttribute('y',my-11);
+        ptext.setAttribute('text-anchor','middle');
+        ptext.setAttribute('class','anat-nt-label');
+        ptext.setAttribute('fill', e.nt.color);
+        ptext.textContent = e.nt.label;
+        dyn.appendChild(ptext);
+      }
+    });
+
+    // dots + radially fanned labels (so tightly clustered structures stay legible)
+    pts.forEach(p=>{
+      let dx=p.x-cx, dy=p.y-cy;
+      const dist=Math.hypot(dx,dy);
+      const ux = dist<1 ? 0 : dx/dist, uy = dist<1 ? -1 : dy/dist;
+      const labelDist = 56;
+      const lx = p.x + ux*labelDist, ly = p.y + uy*labelDist;
+      const color = p.node.decoy ? '#ff5d5d' : sigDef.color;
+
+      const leader = document.createElementNS(SVGNS,'line');
+      leader.setAttribute('x1',p.x); leader.setAttribute('y1',p.y);
+      leader.setAttribute('x2',lx); leader.setAttribute('y2',ly);
+      leader.setAttribute('stroke', p.node.decoy ? 'rgba(255,93,93,.4)' : 'rgba(200,210,230,.35)');
+      leader.setAttribute('stroke-width','1');
+      dyn.appendChild(leader);
+
+      const dot = document.createElementNS(SVGNS,'circle');
+      dot.setAttribute('cx',p.x); dot.setAttribute('cy',p.y);
+      dot.setAttribute('r', p.node.decoy ? 7 : 9);
+      dot.setAttribute('fill', color);
+      dot.setAttribute('stroke','#fff'); dot.setAttribute('stroke-width','1.5');
+      dot.setAttribute('class','anat-dot');
+      dot.style.filter = `drop-shadow(0 0 7px ${color})`;
+      dot.style.cursor='pointer';
+      dot.addEventListener('click', ()=> showDetail(p.node.detail));
+      dyn.appendChild(dot);
+
+      const label = document.createElementNS(SVGNS,'text');
+      label.setAttribute('x',lx); label.setAttribute('y',ly);
+      label.setAttribute('text-anchor', ux>0.25 ? 'start' : (ux<-0.25 ? 'end' : 'middle'));
+      label.setAttribute('class','anat-label');
+      label.setAttribute('fill', color);
+      label.style.cursor='pointer';
+      label.textContent = p.node.label.split('\n')[0];
+      label.addEventListener('click', ()=> showDetail(p.node.detail));
+      dyn.appendChild(label);
+    });
+  });
+
+  return svg;
+}
+
 function goToAnatomy(){
   document.getElementById('anatomy-title').textContent = currentLevel.title;
   document.getElementById('anatomy-summary').textContent = currentLevel.anatomy.summary;
-  const flowsWrap = document.getElementById('anatomy-flows');
-  flowsWrap.innerHTML='';
-  currentLevel.signals.forEach(sigDef=>{
-    const block = document.createElement('div');
-    block.className='anatomy-flow-block';
-    const nameRow = currentLevel.signals.length>1 ? `<div class="anatomy-flow-name" style="color:${sigDef.color}">${sigDef.name}</div>` : '';
-    block.innerHTML = nameRow + '<div class="anatomy-flow"></div>';
-    const flow = block.querySelector('.anatomy-flow');
-    sigDef.sequence.forEach((nodeId,i)=>{
-      const node = sigDef.nodes.find(n=>n.id===nodeId);
-      const card = document.createElement('div');
-      card.className='anatomy-node';
-      card.innerHTML = `<b>${node.label.split('\n').join(' ')}</b>`;
-      card.addEventListener('click', ()=> document.getElementById('anatomy-detail').textContent = node.detail);
-      flow.appendChild(card);
-      if(i < sigDef.sequence.length-1){
-        const nextId = sigDef.sequence[i+1];
-        const e = sigDef.edges.find(e=> (e.a===nodeId&&e.b===nextId)||(e.a===nextId&&e.b===nodeId));
-        const arrow = document.createElement('div');
-        arrow.className='anatomy-arrow';
-        const col = e && e.direction==='afferent' ? 'var(--violet)' : 'var(--cyan)';
-        let html = `<span style="color:${col}">→</span>`;
-        if(e && e.nt) html += `<span class="nt-pill" style="background:${e.nt.color}22;color:${e.nt.color};border:1px solid ${e.nt.color}66">${e.nt.label}</span>`;
-        arrow.innerHTML = html;
-        flow.appendChild(arrow);
-      }
-    });
-    flowsWrap.appendChild(block);
-  });
+
+  const wrap = document.getElementById('anatomy-illustration');
+  wrap.innerHTML = '';
+  wrap.appendChild(buildAnatomySVG(currentLevel));
+
   const factsEl = document.getElementById('anatomy-facts');
   factsEl.innerHTML='';
   currentLevel.anatomy.facts.forEach(f=>{
     const li=document.createElement('li'); li.textContent=f; factsEl.appendChild(li);
   });
-  document.getElementById('anatomy-detail').textContent = 'Tap any structure above to learn more about it.';
+  document.getElementById('anatomy-detail').textContent = 'Tap any glowing structure to learn more about it.';
   showScreen('screen-anatomy');
 }
 document.getElementById('btn-anatomy-next').addEventListener('click', goToQuiz);
